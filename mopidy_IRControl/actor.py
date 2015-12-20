@@ -30,6 +30,7 @@ class CommandDispatcher(object):
     def __init__(self, core, config, buttonPressEvent):
         self.core = core
         self.config = config
+        self._playlistModeRandom = config['playlist_mode_random']
         self._handlers = {}
         self.registerHandler('playpause', self._playpauseHandler)
         self.registerHandler('mute', self._muteHandler)
@@ -44,8 +45,10 @@ class CommandDispatcher(object):
 
         for i in range(10):
             self.registerHandler('num{0}'.format(i), self._playlistFunction(i))
+        self.registerHandler('setup', self._playlistRandomModeHandler)
 
         buttonPressEvent.append(self.handleCommand)
+        logger.warn("Playlist random mode: '%s'", self._playlistModeRandom)
 
     def handleCommand(self, cmd):
         if cmd in self._handlers:
@@ -85,10 +88,16 @@ class CommandDispatcher(object):
         self.core.tracklist.add(uris=uris)
         self.core.tracklist.set_consume(False)
         self.core.tracklist.set_repeat(True)
+        self.core.tracklist.set_random(self._playlistModeRandom)
         self.core.playback.play()
 
     def _playlistFunction(self, num):
         return lambda: self._playPlaylist(self.config['playlist_uri_template'].format(num))
+
+    def _playlistRandomModeHandler(self):
+        self._playlistModeRandom = not self._playlistModeRandom
+        self.core.tracklist.set_random(self._playlistModeRandom)
+        logger.warn("Playlist random mode: '%s'", self.core.tracklist.get_random().get())
 
 class LircThread(threading.Thread):
     def __init__(self, configFile):

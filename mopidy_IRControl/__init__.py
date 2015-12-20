@@ -41,6 +41,8 @@ class Extension(ext.Extension):
         schema['num7'] = config.String()
         schema['num8'] = config.String()
         schema['num9'] = config.String()
+        schema['setup'] = config.String()
+        schema['playlist_mode_random'] = config.Boolean()
         return schema
 
     def setup(self, registry):

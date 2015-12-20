@@ -24,6 +24,7 @@ class ExtensionTest(unittest.TestCase):
         self.assertIn('[IRControl]', config)
         self.assertIn('enabled = true', config)
         self.assertIn('playlist_uri_template = m3u:playlist{0}.m3u', config)
+        self.assertIn('playlist_mode_random = false', config)
 
     def test_get_config_schema(self):
         ext = Extension()
@@ -53,6 +54,7 @@ class FrontendTest(unittest.TestCase):
         IRconfig['volumeup'] = 'KEY_VOLUMEUP'
         IRconfig['volumedown'] = 'KEY_VOLUMEDOWN'
         IRconfig['enabled'] = True
+        IRconfig['playlist_mode_random'] = False
         self.config = {'IRControl': IRconfig}
 
     def test_on_start_should_spawn_thread(self):
@@ -112,7 +114,8 @@ class CommandDispatcherTest(unittest.TestCase):
         self.coreMock.tracklist = Mock()
 
         self.dispatcher = lib.CommandDispatcher(self.coreMock,
-                                                {'playlist_uri_template': 'local:playlist:playlist{0}.m3u'},
+                                                {'playlist_uri_template': 'local:playlist:playlist{0}.m3u',
+                                                 'playlist_mode_random': False},
                                                 self.buttonPressEvent)
 
     def commandXYZHandler(self):
@@ -205,6 +208,10 @@ class CommandDispatcherTest(unittest.TestCase):
         self.coreMock.playlists.get_items.assert_called_with('local:playlist:playlist9.m3u')
         self.coreMock.tracklist.add.assert_called_with(uris=['track1', 'track2'])
         self.coreMock.playback.play.assert_called_with()
+
+    def test_playlist_random_mode(self):
+        self.dispatcher.handleCommand('setup')
+        self.coreMock.tracklist.set_random.assert_called_with(True)
 
 
 class LircThreadTest(unittest.TestCase):
